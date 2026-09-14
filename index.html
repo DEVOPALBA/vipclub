@@ -656,7 +656,10 @@
       loadStatus.className = `load-status${state ? ` ${state}` : ''}`;
     }
 
-    const BERLIN_TIME_URL = 'https://worldtimeapi.org/api/timezone/Europe/Berlin';
+    const BERLIN_TIME_URLS = [
+      'https://timeapi.io/api/time/current/zone?timeZone=Europe%2FBerlin',
+      'https://worldtimeapi.org/api/timezone/Europe/Berlin'
+    ];
 
     function formatBerlinTime(value) {
       const date = new Date(value);
@@ -673,25 +676,46 @@
       }).format(date);
     }
 
-    async function refreshBerlinClock(prefix = 'Berlin-Zeit') {
-      try {
-        const separator = BERLIN_TIME_URL.includes('?') ? '&' : '?';
-        const response = await fetch(`${BERLIN_TIME_URL}${separator}r=${Math.random().toString(36).slice(2)}`, {
-          cache: 'no-store',
-          headers: { 'Accept': 'application/json' }
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        const sourceInstant = data.datetime || (Number.isFinite(Number(data.unixtime)) ? Number(data.unixtime) * 1000 : null);
-        const berlinTime = formatBerlinTime(sourceInstant);
-        if (!berlinTime) throw new Error('Ungültige Zeitantwort');
-        setLoadStatus(`${prefix}: ${berlinTime}`, 'success');
-        return berlinTime;
-      } catch (error) {
-        setLoadStatus('Berlin-Zeit nicht verfügbar', 'error');
-        console.error('Berlin-Zeit konnte nicht geladen werden:', error);
-        return null;
+    function extractInternetInstant(data) {
+      const candidates = [
+        data?.dateTime,
+        data?.datetime,
+        data?.currentDateTime,
+        data?.utcDateTime,
+        Number.isFinite(Number(data?.unixtime)) ? Number(data.unixtime) * 1000 : null,
+        Number.isFinite(Number(data?.epoch)) ? Number(data.epoch) * 1000 : null
+      ];
+      for (const candidate of candidates) {
+        if (candidate === null || candidate === undefined || candidate === '') continue;
+        const date = new Date(candidate);
+        if (!Number.isNaN(date.getTime())) return date;
       }
+      return null;
+    }
+
+    async function refreshBerlinClock(prefix = 'Berlin-Zeit') {
+      const errors = [];
+      for (const url of BERLIN_TIME_URLS) {
+        try {
+          const separator = url.includes('?') ? '&' : '?';
+          const response = await fetch(`${url}${separator}r=${Math.random().toString(36).slice(2)}`, {
+            cache: 'no-store',
+            headers: { 'Accept': 'application/json' }
+          });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          const sourceInstant = extractInternetInstant(data);
+          const berlinTime = sourceInstant ? formatBerlinTime(sourceInstant) : '';
+          if (!berlinTime) throw new Error('Ungültige Zeitantwort');
+          setLoadStatus(`${prefix}: ${berlinTime}`, 'success');
+          return berlinTime;
+        } catch (error) {
+          errors.push(`${url}: ${error.message}`);
+        }
+      }
+      setLoadStatus('Berlin-Zeit nicht verfügbar', 'error');
+      console.error('Keine externe Berlin-Zeitquelle erreichbar:', errors.join(' | '));
+      return null;
     }
 
     async function applyGuestList(data) {

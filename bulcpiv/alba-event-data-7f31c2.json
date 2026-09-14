@@ -1,0 +1,34 @@
+{
+  "event": "Testspiel 30.10.2026 Rasta Vechta",
+  "updatedAt": "2026-09-13T18:00:00Z",
+  "guests": [
+    {
+      "id": 1,
+      "name": "Anton Müller",
+      "org": "Tischbelegung",
+      "table": 30,
+      "pax": 5,
+      "remark": "Kommt später"
+    },
+    {
+      "id": 2,
+      "name": "Best",
+      "org": "Tischbelegung",
+      "table": 15,
+      "pax": 4,
+      "remark": ""
+    },
+    {
+      "id": 3,
+      "name": "Max Mustermann",
+      "org": "Tischbelegung",
+      "table": 78,
+      "pax": 2,
+      "remark": ""
+    }
+  ],
+  "notes": [
+    "René kommt später",
+    "Arne ohne Ticket ok"
+  ]
+}

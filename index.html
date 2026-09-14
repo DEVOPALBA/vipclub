@@ -105,7 +105,7 @@
     .btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
     .btn.primary:hover { background: var(--blue); }
     .map-viewport { position: relative; margin: 0 14px 14px; min-height: 560px; border-radius: 17px; overflow: hidden; background: #f8fbfb; border: 1px solid var(--line); touch-action: none; overscroll-behavior: contain; user-select: none; -webkit-user-select: none; }
-    .map-viewport svg { touch-action: none; }
+    .map-viewport svg { display: block; width: 100%; height: 100%; min-height: 0; touch-action: none; }
     .map-note { position:absolute; left: 15px; top: 15px; background: rgba(255,255,255,.88); backdrop-filter: blur(8px); border: 1px solid rgba(217,225,229,.9); border-radius: 12px; padding: 9px 11px; font-size: 11px; font-weight: 800; color: var(--blue); }
     .focus-card { position:absolute; right: 15px; bottom: 15px; width: min(250px, calc(100% - 30px)); padding: 15px; border-radius: 16px; background: rgba(20,33,43,.95); color: #fff; box-shadow: 0 16px 36px rgba(20,33,43,.24); }
     .focus-card .label { color: #b7c4ca; font-size: 10px; text-transform:uppercase; letter-spacing:.13em; font-weight: 900; }
@@ -294,7 +294,7 @@
 
       <section class="map-card" aria-label="Bereinigter Bestuhlungsplan">
         <div class="map-viewport">
-          <svg id="map" viewBox="0 0 2000 1248" role="img" aria-label="Interaktiver, originalgetreu angelegter reduzierter Bestuhlungsplan">
+          <svg id="map" viewBox="0 0 2000 1248" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Interaktiver, originalgetreu angelegter reduzierter Bestuhlungsplan">
             <defs>
               <pattern id="fineGrid" width="40" height="40" patternUnits="userSpaceOnUse">
                 <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e6edef" stroke-width="1" />
@@ -372,13 +372,17 @@
     function setMapViewBox(x, y, width, height) {
       const minWidth = 520;
       const maxWidth = 2000;
-      const minHeight = 325;
-      const maxHeight = 1248;
       const aspect = 2000 / 1248;
+      width = Number.isFinite(width) ? width : maxWidth;
+      height = Number.isFinite(height) ? height : width / aspect;
+      if (width >= maxWidth * 0.985 || height >= 1248 * 0.985) {
+        resetMapView();
+        return;
+      }
       width = Math.max(minWidth, Math.min(maxWidth, width));
-      height = Math.max(minHeight, Math.min(maxHeight, height));
-      height = Math.max(minHeight, Math.min(maxHeight, width / aspect));
-      width = Math.max(minWidth, Math.min(maxWidth, height * aspect));
+      height = width / aspect;
+      x = Number.isFinite(x) ? x : 0;
+      y = Number.isFinite(y) ? y : 0;
       x = Math.max(0, Math.min(2000 - width, x));
       y = Math.max(0, Math.min(1248 - height, y));
       map.setAttribute('viewBox', `${x} ${y} ${width} ${height}`);

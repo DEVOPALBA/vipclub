@@ -20,15 +20,15 @@
     },
     {
       "id": 3,
-      "name": "Max Mustermann",
+      "name": "Maxi Mustermann",
       "org": "Tischbelegung",
-      "table": 78,
+      "table": 79,
       "pax": 2,
       "remark": ""
     }
   ],
   "notes": [
-    "René kommt später",
+    "René kommt nicht später",
     "Arne ohne Ticket ok"
   ]
 }

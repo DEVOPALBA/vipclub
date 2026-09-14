@@ -75,7 +75,9 @@
     .search-wrap span { position: absolute; left: 14px; top: 11px; font-size: 18px; color: var(--muted); }
     input[type=search] { width: 100%; border: 1px solid var(--line); background: var(--soft); border-radius: 14px; padding: 13px 14px 13px 42px; outline: none; color: var(--ink); }
     input[type=search]:focus { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(30,83,111,.12); }
-    .result-meta { display:flex; justify-content:space-between; align-items:center; margin: 4px 0 9px; color: var(--muted); font-size: 12px; }
+    .result-meta { display:grid; grid-template-columns:max-content minmax(0,1fr); align-items:center; gap: 7px; margin: 4px 0 9px; color: var(--muted); font-size: 11px; }
+    #resultCount, #loadStatus { white-space: nowrap; }
+    #loadStatus { min-width: 0; overflow: hidden; text-overflow: ellipsis; text-align: right; }
     .sort-wrap { display:flex; align-items:center; justify-content:space-between; gap: 8px; margin: 0 0 10px; }
     .sort-wrap label { color: var(--muted); font-size: 11px; font-weight: 850; }
     .sort-wrap select { min-width: 156px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); padding: 8px 9px; font-size: 11px; font-weight: 750; outline: none; }
@@ -102,8 +104,8 @@
     .btn:hover { border-color: var(--blue); color: var(--blue); }
     .btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
     .btn.primary:hover { background: var(--blue); }
-    .map-viewport { position: relative; margin: 0 14px 14px; min-height: 560px; border-radius: 17px; overflow: hidden; background: #f8fbfb; border: 1px solid var(--line); touch-action: none; }
-    svg { display:block; width:100%; height:100%; min-height: 560px; }
+    .map-viewport { position: relative; margin: 0 14px 14px; min-height: 560px; border-radius: 17px; overflow: hidden; background: #f8fbfb; border: 1px solid var(--line); touch-action: none; overscroll-behavior: contain; user-select: none; -webkit-user-select: none; }
+    .map-viewport svg { touch-action: none; }
     .map-note { position:absolute; left: 15px; top: 15px; background: rgba(255,255,255,.88); backdrop-filter: blur(8px); border: 1px solid rgba(217,225,229,.9); border-radius: 12px; padding: 9px 11px; font-size: 11px; font-weight: 800; color: var(--blue); }
     .focus-card { position:absolute; right: 15px; bottom: 15px; width: min(250px, calc(100% - 30px)); padding: 15px; border-radius: 16px; background: rgba(20,33,43,.95); color: #fff; box-shadow: 0 16px 36px rgba(20,33,43,.24); }
     .focus-card .label { color: #b7c4ca; font-size: 10px; text-transform:uppercase; letter-spacing:.13em; font-weight: 900; }
@@ -216,17 +218,28 @@
       .map-note { left: 10px; top:10px; }
       .focus-card { right:10px; bottom:10px; }
     }
+    /* Produktivansicht auf dem iPad: keine Simulationsränder, volle nutzbare Höhe. */
+    .app { max-width: none; min-height: 100dvh; padding: 10px; }
+    .result-meta { flex-wrap: nowrap; gap: 8px; min-width: 0; }
+    #resultCount, #loadStatus { white-space: nowrap; flex: 0 0 auto; }
+    #loadStatus { overflow: hidden; text-overflow: ellipsis; }
+    .panel-footer { margin-top: auto; flex: 0 0 auto; }
+    @media (min-width: 761px) and (orientation: landscape) {
+      .topbar { padding: 6px 2px 8px; }
+      .layout { height: calc(100dvh - 78px); }
+      .panel, .map-card { height: 100%; }
+      .panel { min-height: 0; }
+      .map-viewport { flex: 1; min-height: 0; }
+      .map-viewport svg { min-height: 0; height: 100%; }
+    }
+    @media (max-width: 1100px) and (orientation: landscape) {
+      .result-meta { font-size: 10px; gap: 5px; }
+      #loadStatus { font-size: 9px; }
+    }
   </style>
 </head>
 <body>
-  <nav class="preview-toolbar" aria-label="Ansicht simulieren">
-    <span class="preview-label">Ansicht testen</span>
-    <button class="btn active" id="previewLandscapeBtn" type="button">iPad 9 quer</button>
-    <button class="btn" id="previewPortraitBtn" type="button">iPad 9 hoch</button>
-    <button class="btn" id="previewDesktopBtn" type="button">Desktop</button>
-  </nav>
-  <div id="deviceStage" class="device-stage is-simulated preview-landscape">
-  <main class="app">
+  <main id="deviceStage" class="app">
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark" aria-label="ALBA BERLIN" role="img"><img src="data:image/png;base64,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" alt="ALBA BERLIN" /></div>
@@ -308,24 +321,11 @@
       </section>
     </section>
   </main>
-  </div>
 
   <script>
     const deviceStage = document.getElementById('deviceStage');
-    const previewButtons = {
-      landscape: document.getElementById('previewLandscapeBtn'),
-      portrait: document.getElementById('previewPortraitBtn'),
-      desktop: document.getElementById('previewDesktopBtn')
-    };
-    function setPreview(mode) {
-      deviceStage.classList.toggle('is-simulated', mode !== 'desktop');
-      deviceStage.classList.toggle('preview-landscape', mode === 'landscape');
-      deviceStage.classList.toggle('preview-portrait', mode === 'portrait');
-      Object.entries(previewButtons).forEach(([key, button]) => button.classList.toggle('active', key === mode));
-    }
-    previewButtons.landscape.addEventListener('click', () => setPreview('landscape'));
-    previewButtons.portrait.addEventListener('click', () => setPreview('portrait'));
-    previewButtons.desktop.addEventListener('click', () => setPreview('desktop'));
+    const previewButtons = {};
+    function setPreview() {}
 
     let guests = [
       { id: 1, name: 'Anton Müller', org: 'Tischbelegung', table: 30, pax: 5, remark: 'Kommt später' },
@@ -366,6 +366,108 @@
     let selectedTable = null;
     let selectedGuest = null;
     let initialViewBox = '0 0 2000 1248';
+    const activePointers = new Map();
+    let pinchStart = null;
+
+    function setMapViewBox(x, y, width, height) {
+      const minWidth = 520;
+      const maxWidth = 2000;
+      const minHeight = 325;
+      const maxHeight = 1248;
+      const aspect = 2000 / 1248;
+      width = Math.max(minWidth, Math.min(maxWidth, width));
+      height = Math.max(minHeight, Math.min(maxHeight, height));
+      height = Math.max(minHeight, Math.min(maxHeight, width / aspect));
+      width = Math.max(minWidth, Math.min(maxWidth, height * aspect));
+      x = Math.max(0, Math.min(2000 - width, x));
+      y = Math.max(0, Math.min(1248 - height, y));
+      map.setAttribute('viewBox', `${x} ${y} ${width} ${height}`);
+    }
+
+    function resetMapView() {
+      map.setAttribute('viewBox', initialViewBox);
+    }
+
+    function pointerDistance(a, b) {
+      return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    }
+
+    function pointerCenter(a, b) {
+      return { x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 };
+    }
+
+    function clientToViewBox(clientX, clientY, viewBox) {
+      const rect = map.getBoundingClientRect();
+      return {
+        x: viewBox.x + ((clientX - rect.left) / rect.width) * viewBox.width,
+        y: viewBox.y + ((clientY - rect.top) / rect.height) * viewBox.height
+      };
+    }
+
+    function currentViewBox() {
+      return map.getAttribute('viewBox').split(' ').map(Number);
+    }
+
+    function startPinch() {
+      const [a, b] = [...activePointers.values()];
+      const [x, y, width, height] = currentViewBox();
+      const center = pointerCenter(a, b);
+      const focalPoint = clientToViewBox(center.x, center.y, { x, y, width, height });
+      pinchStart = {
+        distance: pointerDistance(a, b),
+        x, y, width, height,
+        focalClient: center,
+        focalPoint
+      };
+    }
+
+    function updatePinch() {
+      if (!pinchStart || activePointers.size < 2) return;
+      const [a, b] = [...activePointers.values()];
+      const distance = pointerDistance(a, b);
+      if (!distance || !pinchStart.distance) return;
+      const scale = distance / pinchStart.distance;
+      const width = pinchStart.width / scale;
+      const height = pinchStart.height / scale;
+      const rect = map.getBoundingClientRect();
+      const focalXRatio = (pinchStart.focalClient.x - rect.left) / rect.width;
+      const focalYRatio = (pinchStart.focalClient.y - rect.top) / rect.height;
+      const x = pinchStart.focalPoint.x - focalXRatio * width;
+      const y = pinchStart.focalPoint.y - focalYRatio * height;
+      setMapViewBox(x, y, width, height);
+    }
+
+    map.addEventListener('pointerdown', event => {
+      if (event.pointerType !== 'touch') return;
+      activePointers.set(event.pointerId, event);
+      map.setPointerCapture?.(event.pointerId);
+      if (activePointers.size === 2) {
+        event.preventDefault();
+        startPinch();
+      }
+    }, { passive: false });
+
+    map.addEventListener('pointermove', event => {
+      if (!activePointers.has(event.pointerId)) return;
+      activePointers.set(event.pointerId, event);
+      if (activePointers.size >= 2) {
+        event.preventDefault();
+        updatePinch();
+      }
+    }, { passive: false });
+
+    function endPointer(event) {
+      activePointers.delete(event.pointerId);
+      if (activePointers.size < 2) pinchStart = null;
+    }
+    map.addEventListener('pointerup', endPointer);
+    map.addEventListener('pointercancel', endPointer);
+    map.addEventListener('pointerleave', event => {
+      if (activePointers.has(event.pointerId) && activePointers.size < 2) endPointer(event);
+    });
+    map.addEventListener('gesturestart', event => event.preventDefault(), { passive: false });
+    map.addEventListener('gesturechange', event => event.preventDefault(), { passive: false });
+    map.addEventListener('gestureend', event => event.preventDefault(), { passive: false });
 
     function tableGuests(number) { return guests.filter(g => g.table === number); }
     function makeTable(number, x, y, rotation, type = 'long') {

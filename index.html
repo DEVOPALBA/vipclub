@@ -75,10 +75,13 @@
     .search-wrap span { position: absolute; left: 14px; top: 11px; font-size: 18px; color: var(--muted); }
     input[type=search] { width: 100%; border: 1px solid var(--line); background: var(--soft); border-radius: 14px; padding: 13px 14px 13px 42px; outline: none; color: var(--ink); }
     input[type=search]:focus { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(30,83,111,.12); }
-    .result-meta { display:grid; grid-template-columns:max-content max-content minmax(0,1fr); align-items:center; gap: 7px; margin: 4px 0 9px; color: var(--muted); font-size: 11px; }
-    .load-status-label { color: var(--muted); white-space: nowrap; }
-    #resultCount, #loadStatus { white-space: nowrap; }
-    #loadStatus { min-width: 0; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+    .result-meta { display:flex; align-items:center; justify-content:space-between; gap: 8px; margin: 4px 0 9px; color: var(--muted); font-size: 11px; min-width: 0; }
+    .last-updated { display:flex; align-items:center; gap: 4px; min-width: 0; margin-left: auto; }
+    .load-status-label { color: var(--muted); white-space: nowrap; flex: 0 0 auto; }
+    .load-status { color: var(--muted); font-size: 11px; font-weight: 750; text-align: right; white-space: nowrap; flex: 0 0 auto; }
+    .load-status.success { color: var(--green); }
+    .load-status.error { color: #a43b3b; }
+    #resultCount { white-space: nowrap; flex: 0 0 auto; }
     .sort-wrap { display:flex; align-items:center; justify-content:space-between; gap: 8px; margin: 0 0 10px; }
     .sort-wrap label { color: var(--muted); font-size: 11px; font-weight: 850; }
     .sort-wrap select { min-width: 156px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); padding: 8px 9px; font-size: 11px; font-weight: 750; outline: none; }
@@ -221,9 +224,10 @@
     }
     /* Produktivansicht auf dem iPad: keine Simulationsränder, volle nutzbare Höhe. */
     .app { max-width: none; min-height: 100dvh; padding: 10px; }
-    .result-meta { flex-wrap: nowrap; gap: 8px; min-width: 0; }
+    .result-meta { flex-wrap: wrap; gap: 8px; min-width: 0; }
+    .last-updated { margin-left: 0; }
     #resultCount, #loadStatus { white-space: nowrap; flex: 0 0 auto; }
-    #loadStatus { overflow: hidden; text-overflow: ellipsis; }
+    #loadStatus { overflow: visible; text-overflow: clip; }
     .panel-footer { margin-top: auto; flex: 0 0 auto; }
     @media (min-width: 761px) and (orientation: landscape) {
       .topbar { padding: 6px 2px 8px; }
@@ -235,7 +239,8 @@
     }
     @media (max-width: 1100px) and (orientation: landscape) {
       .result-meta { font-size: 10px; gap: 5px; }
-      #loadStatus { font-size: 9px; }
+      .last-updated { flex-wrap: wrap; row-gap: 2px; }
+      .load-status-label, .load-status { font-size: 9px; }
     }
   </style>
 </head>
@@ -277,7 +282,7 @@
             <li>Arne ohne Ticket ok</li>
           </ul>
         </div>
-        <div class="result-meta"><span id="resultCount">3 Tische belegt</span><span class="load-status-label">Letzte Aktualisierung</span><span id="loadStatus" class="load-status" aria-live="polite">—</span></div>
+        <div class="result-meta"><span id="resultCount">3 Tische belegt</span><span class="last-updated"><span class="load-status-label">Letzte Aktualisierung</span><span id="loadStatus" class="load-status" aria-live="polite">—</span></span></div>
         <div class="sort-wrap">
           <label for="sortSelect">Sortieren</label>
           <select id="sortSelect" aria-label="Gästeliste sortieren">

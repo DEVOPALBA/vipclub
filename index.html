@@ -368,6 +368,9 @@
     let initialViewBox = '0 0 2000 1248';
     const activePointers = new Map();
     let pinchStart = null;
+    let panStart = null;
+    let suppressNextClick = false;
+    let suppressClickTimer = null;
 
     function setMapViewBox(x, y, width, height) {
       const minWidth = 520;
@@ -392,6 +395,24 @@
       map.setAttribute('viewBox', initialViewBox);
     }
 
+    function currentViewBox() {
+      return map.getAttribute('viewBox').split(' ').map(Number);
+    }
+
+    function contentMetrics(viewBox = currentViewBox()) {
+      const rect = map.getBoundingClientRect();
+      const scale = Math.min(rect.width / viewBox[2], rect.height / viewBox[3]);
+      const width = viewBox[2] * scale;
+      const height = viewBox[3] * scale;
+      return {
+        left: rect.left + (rect.width - width) / 2,
+        top: rect.top + (rect.height - height) / 2,
+        width,
+        height,
+        scale
+      };
+    }
+
     function pointerDistance(a, b) {
       return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
     }
@@ -401,15 +422,50 @@
     }
 
     function clientToViewBox(clientX, clientY, viewBox) {
-      const rect = map.getBoundingClientRect();
+      const metrics = contentMetrics([viewBox.x, viewBox.y, viewBox.width, viewBox.height]);
       return {
-        x: viewBox.x + ((clientX - rect.left) / rect.width) * viewBox.width,
-        y: viewBox.y + ((clientY - rect.top) / rect.height) * viewBox.height
+        x: viewBox.x + ((clientX - metrics.left) / metrics.width) * viewBox.width,
+        y: viewBox.y + ((clientY - metrics.top) / metrics.height) * viewBox.height
       };
     }
 
-    function currentViewBox() {
-      return map.getAttribute('viewBox').split(' ').map(Number);
+    function startPan(event) {
+      const [x, y, width, height] = currentViewBox();
+      if (width >= 1990 || height >= 1240) return;
+      const metrics = contentMetrics([x, y, width, height]);
+      panStart = {
+        pointerId: event.pointerId,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        x,
+        y,
+        width,
+        height,
+        scale: metrics.scale,
+        moved: false
+      };
+    }
+
+    function suppressFollowingClick() {
+      suppressNextClick = true;
+      window.clearTimeout(suppressClickTimer);
+      suppressClickTimer = window.setTimeout(() => { suppressNextClick = false; }, 500);
+    }
+
+    function updatePan(event) {
+      if (!panStart || activePointers.size !== 1 || panStart.pointerId !== event.pointerId) return;
+      const dx = event.clientX - panStart.clientX;
+      const dy = event.clientY - panStart.clientY;
+      if (!panStart.moved && Math.hypot(dx, dy) < 6) return;
+      panStart.moved = true;
+      suppressFollowingClick();
+      event.preventDefault();
+      setMapViewBox(
+        panStart.x - dx / panStart.scale,
+        panStart.y - dy / panStart.scale,
+        panStart.width,
+        panStart.height
+      );
     }
 
     function startPinch() {
@@ -417,6 +473,7 @@
       const [x, y, width, height] = currentViewBox();
       const center = pointerCenter(a, b);
       const focalPoint = clientToViewBox(center.x, center.y, { x, y, width, height });
+      panStart = null;
       pinchStart = {
         distance: pointerDistance(a, b),
         x, y, width, height,
@@ -433,18 +490,27 @@
       const scale = distance / pinchStart.distance;
       const width = pinchStart.width / scale;
       const height = pinchStart.height / scale;
-      const rect = map.getBoundingClientRect();
-      const focalXRatio = (pinchStart.focalClient.x - rect.left) / rect.width;
-      const focalYRatio = (pinchStart.focalClient.y - rect.top) / rect.height;
+      const metrics = contentMetrics([pinchStart.x, pinchStart.y, pinchStart.width, pinchStart.height]);
+      const focalXRatio = (pinchStart.focalClient.x - metrics.left) / metrics.width;
+      const focalYRatio = (pinchStart.focalClient.y - metrics.top) / metrics.height;
       const x = pinchStart.focalPoint.x - focalXRatio * width;
       const y = pinchStart.focalPoint.y - focalYRatio * height;
       setMapViewBox(x, y, width, height);
     }
 
+    map.addEventListener('click', event => {
+      if (!suppressNextClick) return;
+      event.preventDefault();
+      event.stopPropagation();
+      suppressNextClick = false;
+      window.clearTimeout(suppressClickTimer);
+    }, true);
+
     map.addEventListener('pointerdown', event => {
-      if (event.pointerType !== 'touch') return;
+      if (event.pointerType !== 'touch' && event.pointerType !== 'mouse') return;
       activePointers.set(event.pointerId, event);
       map.setPointerCapture?.(event.pointerId);
+      if (activePointers.size === 1) startPan(event);
       if (activePointers.size === 2) {
         event.preventDefault();
         startPinch();
@@ -457,18 +523,20 @@
       if (activePointers.size >= 2) {
         event.preventDefault();
         updatePinch();
+      } else {
+        updatePan(event);
       }
     }, { passive: false });
 
     function endPointer(event) {
+      const wasPanning = panStart && panStart.pointerId === event.pointerId && panStart.moved;
       activePointers.delete(event.pointerId);
+      if (wasPanning) suppressFollowingClick();
       if (activePointers.size < 2) pinchStart = null;
+      if (activePointers.size === 0) panStart = null;
     }
     map.addEventListener('pointerup', endPointer);
     map.addEventListener('pointercancel', endPointer);
-    map.addEventListener('pointerleave', event => {
-      if (activePointers.has(event.pointerId) && activePointers.size < 2) endPointer(event);
-    });
     map.addEventListener('gesturestart', event => event.preventDefault(), { passive: false });
     map.addEventListener('gesturechange', event => event.preventDefault(), { passive: false });
     map.addEventListener('gestureend', event => event.preventDefault(), { passive: false });

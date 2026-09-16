@@ -861,6 +861,12 @@
     updateDeviceClock();
 
     searchEl.addEventListener('input', renderGuests);
+    searchEl.addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        searchEl.blur();
+      }
+    });
     sortSelect.addEventListener('change', renderGuests);
     document.getElementById('clearBtn').addEventListener('click', clearSelection);
 

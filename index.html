@@ -77,8 +77,8 @@
     h2 { font-size: 17px; letter-spacing: -.03em; margin: 0; }
     p { color: var(--muted); line-height: 1.45; margin: 0; }
     .search-wrap { position: relative; margin: 14px 0 13px; }
-    .search-wrap span { position: absolute; left: 14px; top: 11px; font-size: 18px; color: var(--muted); }
-    .search-clear { position: absolute; right: 8px; top: 8px; width: 26px; height: 26px; border: none; background: var(--soft); color: var(--muted); border-radius: 50%; font-size: 13px; line-height: 1; display: grid; place-items: center; padding: 0; }
+    .search-wrap span { position: absolute; left: 14px; top: 9px; font-size: 22px; color: var(--muted); }
+    .search-clear { position: absolute; right: 7px; top: 6px; width: 32px; height: 32px; border: none; background: var(--soft); color: var(--muted); border-radius: 50%; font-size: 17px; line-height: 1; display: grid; place-items: center; padding: 0; }
     .search-clear:hover { background: var(--line); color: var(--ink); }
     .search-clear[hidden] { display: none; }
     input[type=search] { width: 100%; border: 1px solid var(--line); background: var(--soft); border-radius: 14px; padding: 13px 38px 13px 42px; outline: none; color: var(--ink); }
@@ -881,7 +881,10 @@
         searchEl.blur();
       });
     }
-    sortSelect.addEventListener('change', renderGuests);
+    sortSelect.addEventListener('change', () => {
+      renderGuests();
+      guestListEl.scrollTop = 0;
+    });
     document.getElementById('clearBtn').addEventListener('click', clearSelection);
 
     const APP_PASSWORD = 'vipclub';

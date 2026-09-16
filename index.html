@@ -199,10 +199,10 @@
     @media (min-width: 761px) and (max-width: 900px) and (orientation: portrait) {
       .preview-toolbar { display:none; }
       .app { max-width: none; padding: 10px; }
-      .layout { grid-template-columns: 1fr; gap: 12px; }
-      .map-card { order: 1; }
-      .panel { order: 2; min-height: 520px; }
-      .map-viewport, svg { min-height: 520px; }
+      .layout { grid-template-columns: minmax(240px, 30%) minmax(0, 1fr); gap: 12px; }
+      .panel { order: 1; min-height: 0; height: calc(100dvh - 80px); }
+      .map-card { order: 2; height: calc(100dvh - 80px); }
+      .map-viewport, svg { min-height: 0; height: 100%; flex: 1; }
     }
     @media (max-width: 1000px) {
       .app { padding: 12px; }
@@ -211,12 +211,15 @@
       .map-head { padding: 17px 18px 12px; }
       .map-footer { padding: 0 18px 14px; }
     }
+    @media (min-width: 901px) and (max-width: 1100px) and (orientation: portrait) {
+      .layout { grid-template-columns: minmax(260px, 30%) minmax(0, 1fr); gap: 14px; }
+    }
     @media (max-width: 760px) {
       .topbar { padding-bottom: 12px; }
       .prototype-pill { display:none; }
       .layout { grid-template-columns: 1fr; }
-      .map-card { order: 1; }
-      .panel { order: 2; min-height: 390px; }
+      .panel { order: 1; min-height: 390px; }
+      .map-card { order: 2; }
       .map-viewport, svg { min-height: 510px; }
       .map-head { align-items: flex-start; }
       .map-actions .btn:not(.primary) { display:none; }

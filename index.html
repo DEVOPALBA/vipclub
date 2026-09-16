@@ -78,7 +78,11 @@
     p { color: var(--muted); line-height: 1.45; margin: 0; }
     .search-wrap { position: relative; margin: 14px 0 13px; }
     .search-wrap span { position: absolute; left: 14px; top: 11px; font-size: 18px; color: var(--muted); }
-    input[type=search] { width: 100%; border: 1px solid var(--line); background: var(--soft); border-radius: 14px; padding: 13px 14px 13px 42px; outline: none; color: var(--ink); }
+    .search-clear { position: absolute; right: 8px; top: 8px; width: 26px; height: 26px; border: none; background: var(--soft); color: var(--muted); border-radius: 50%; font-size: 13px; line-height: 1; display: grid; place-items: center; padding: 0; }
+    .search-clear:hover { background: var(--line); color: var(--ink); }
+    .search-clear[hidden] { display: none; }
+    input[type=search] { width: 100%; border: 1px solid var(--line); background: var(--soft); border-radius: 14px; padding: 13px 38px 13px 42px; outline: none; color: var(--ink); }
+    input[type=search]::-webkit-search-cancel-button { display: none; }
     input[type=search]:focus { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(30,83,111,.12); }
     .result-meta { display:flex; align-items:flex-start; justify-content:space-between; gap: 8px; margin: 4px 0 9px; color: var(--muted); font-size: 11px; min-width: 0; }
     .last-updated { display:flex; flex-direction:column; align-items:flex-end; gap: 2px; min-width: 0; margin-left: auto; }
@@ -315,6 +319,7 @@
         <label class="search-wrap" aria-label="Gast oder Tisch suchen">
           <span>⌕</span>
           <input id="search" type="search" placeholder="Name oder Tisch suchen" autocomplete="off" />
+          <button type="button" id="searchClear" class="search-clear" aria-label="Suche löschen" hidden>✕</button>
         </label>
         <div class="notes-card" aria-label="Allgemeine Anmerkungen">
           <div class="notes-title">Allgemeine Anmerkungen</div>
@@ -487,6 +492,7 @@
     const tablesEl = document.getElementById('tables');
     const guestListEl = document.getElementById('guestList');
     const searchEl = document.getElementById('search');
+    const searchClearBtn = document.getElementById('searchClear');
     const sortSelect = document.getElementById('sortSelect');
     const focusCard = document.getElementById('focusCard');
     const map = document.getElementById('map');
@@ -708,9 +714,10 @@
 
     function renderGuests() {
       const q = searchEl.value.trim().toLowerCase();
+      if (searchClearBtn) searchClearBtn.hidden = !searchEl.value;
       const visible = sortedGuests(guests.filter(g => !q || g.name.toLowerCase().includes(q) || String(g.table).includes(q) || g.org.toLowerCase().includes(q)));
-      const occupiedTables = new Set(visible.map(g => g.table));
-      resultCount.textContent = `${occupiedTables.size} ${occupiedTables.size === 1 ? 'Tisch' : 'Tische'} belegt`;
+      const allOccupiedTables = new Set(guests.map(g => g.table));
+      resultCount.textContent = `${allOccupiedTables.size} ${allOccupiedTables.size === 1 ? 'Tisch' : 'Tische'} belegt`;
       if (!visible.length) { guestListEl.innerHTML = '<div class="empty">Keine Treffer. Suche nach Name, Organisation oder Tischnummer.</div>'; return; }
       guestListEl.innerHTML = visible.map(g => `
         <button class="guest ${selectedGuest === g.id || selectedTable === g.table ? 'selected' : ''}" data-id="${g.id}" data-table="${g.table}">
@@ -867,6 +874,13 @@
         searchEl.blur();
       }
     });
+    if (searchClearBtn) {
+      searchClearBtn.addEventListener('click', () => {
+        searchEl.value = '';
+        renderGuests();
+        searchEl.blur();
+      });
+    }
     sortSelect.addEventListener('change', renderGuests);
     document.getElementById('clearBtn').addEventListener('click', clearSelection);
 
@@ -878,12 +892,12 @@
 
     authForm.addEventListener('submit', event => {
       event.preventDefault();
+      authPassword.blur();
       if (authPassword.value === APP_PASSWORD) {
         document.body.classList.remove('auth-locked');
         authGate.hidden = true;
         authPassword.value = '';
         authError.textContent = '';
-        document.getElementById('search')?.focus();
       } else {
         authError.textContent = 'Passwort ist nicht korrekt.';
         authPassword.select();

@@ -767,6 +767,10 @@
     }
 
     function selectTable(number) {
+      if (selectedTable === number) {
+        clearSelection();
+        return;
+      }
       selectedTable = number;
       selectedGuest = null;
       map.setAttribute('viewBox', initialViewBox);
@@ -777,7 +781,7 @@
     function selectGuest(id) {
       const g = guests.find(item => item.id === id);
       if (!g) return;
-      if (selectedGuest === id) {
+      if (selectedGuest === id || selectedTable === g.table) {
         clearSelection();
         return;
       }

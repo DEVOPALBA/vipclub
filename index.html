@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1e536f" />
   <meta name="application-name" content="VIPCLUB" />
   <link rel="manifest" href="manifest.webmanifest" />
@@ -33,7 +33,8 @@
       -webkit-font-smoothing: antialiased;
     }
     button, input { font: inherit; }
-    button { cursor: pointer; }
+    button { cursor: pointer; touch-action: manipulation; }
+    body { touch-action: manipulation; }
     .app { max-width: 1500px; margin: 0 auto; padding: 18px; }
     .topbar {
       display: flex; align-items: center; justify-content: space-between; gap: 18px;
@@ -99,6 +100,7 @@
     .guest {
       width: 100%; text-align: left; border: 1px solid transparent; background: transparent; border-radius: 14px;
       padding: 11px 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 5px; color: var(--ink);
+      touch-action: manipulation;
     }
     .guest:hover { background: var(--soft); }
     .guest.selected { background: var(--alba-yellow-soft); border-color: #e8c333; }

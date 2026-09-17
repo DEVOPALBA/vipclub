@@ -312,20 +312,7 @@
         <div><small id="eventLabel">Testspiel 30.10.2026 Rasta Vechta</small><strong>VIPCLUB</strong></div>
       </div>
       <div class="topbar-actions">
-        <button class="btn load-list-btn" id="loadListBtn" type="button" aria-label="Aktuelle Gästeliste laden">
-          <span class="load-list-icon" aria-hidden="true">↥</span>
-          <span>Gästeliste laden</span>
-        </button>
-        <dialog class="confirm-dialog" id="loadListDialog" aria-labelledby="loadListDialogTitle">
-          <div class="confirm-dialog-content">
-            <h2 id="loadListDialogTitle">Aktuelle Gästeliste laden?</h2>
-            <p>Bitte bestätigen Sie mit „Ja“. Die vorhandene Liste wird dann aktualisiert.</p>
-            <div class="confirm-dialog-actions">
-              <button class="btn" id="loadListNo" type="button">Nein</button>
-              <button class="btn confirm" id="loadListYes" type="button">Ja</button>
-            </div>
-          </div>
-        </dialog>
+        <span class="result-meta" style="margin:0;"><span class="last-updated"><span class="load-status-label">Letzte Aktualisierung</span><span id="loadStatusTop" class="load-status" aria-live="polite">—</span></span></span>
       </div>
     </header>
 
@@ -805,17 +792,18 @@
       setTableVisuals();
     }
     const GUEST_LIST_URL = 'bulcpiv/alba-event-data-7f31c2.json';
-    const loadListBtn = document.getElementById('loadListBtn');
-    const loadListDialog = document.getElementById('loadListDialog');
-    const loadListNo = document.getElementById('loadListNo');
-    const loadListYes = document.getElementById('loadListYes');
     const loadStatus = document.getElementById('loadStatus');
+    const loadStatusTop = document.getElementById('loadStatusTop');
     const eventLabel = document.getElementById('eventLabel');
     const notesList = document.getElementById('notesList');
 
     function setLoadStatus(message, state = '') {
       loadStatus.textContent = message;
       loadStatus.className = `load-status${state ? ` ${state}` : ''}`;
+      if (loadStatusTop) {
+        loadStatusTop.textContent = message;
+        loadStatusTop.className = `load-status${state ? ` ${state}` : ''}`;
+      }
     }
 
     function updateDeviceClock() {
@@ -865,7 +853,6 @@
     }
 
     async function loadGuestList() {
-      loadListBtn.disabled = true;
       setLoadStatus('Lade Gästeliste …');
       try {
         const separator = GUEST_LIST_URL.includes('?') ? '&' : '?';
@@ -878,21 +865,15 @@
         }
         const data = await response.json();
         await applyGuestList(data);
-        loadListDialog.close();
       } catch (error) {
         setLoadStatus(`Laden fehlgeschlagen: ${error.message}`, 'error');
         console.error('Gästeliste konnte nicht geladen werden:', error);
-      } finally {
-        loadListBtn.disabled = false;
       }
     }
 
-    loadListBtn.addEventListener('click', () => loadListDialog.showModal());
-    loadListNo.addEventListener('click', () => loadListDialog.close());
-    loadListYes.addEventListener('click', loadGuestList);
-
     renderGuests();
     updateDeviceClock();
+    loadGuestList();
 
     searchEl.addEventListener('input', renderGuests);
     searchEl.addEventListener('keydown', event => {
@@ -935,7 +916,15 @@
     });
 
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(error => console.warn('PWA-Service-Worker konnte nicht registriert werden:', error)));
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(registration => {
+            // Bei jedem App-Start prüfen, ob eine neuere sw.js vorliegt (wichtig für
+            // installierte Home-Screen-PWA, die sonst lange am alten SW-Stand hängen kann).
+            registration.update().catch(() => {});
+          })
+          .catch(error => console.warn('PWA-Service-Worker konnte nicht registriert werden:', error));
+      });
     }
 
     // Tastatur-Fix: Die virtuelle Tastatur deckt auf iPad/iPhone den unteren Seitenbereich ab,

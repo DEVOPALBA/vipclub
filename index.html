@@ -78,6 +78,10 @@
     h2 { font-size: 17px; letter-spacing: -.03em; margin: 0; }
     p { color: var(--muted); line-height: 1.45; margin: 0; }
     .search-wrap { position: relative; margin: 14px 0 13px; }
+    .table-filter-wrap { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 12px; }
+    .table-filter-option { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 750; color: var(--ink); cursor: pointer; }
+    .table-filter-option input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--blue); cursor: pointer; }
+    body.keyboard-open .table-filter-wrap { display: none !important; }
     .search-wrap span { position: absolute; left: 14px; top: 9px; font-size: 22px; color: var(--muted); }
     .search-clear { position: absolute; right: 7px; top: 6px; width: 32px; height: 32px; border: none; background: var(--soft); color: var(--muted); border-radius: 50%; font-size: 17px; line-height: 1; display: grid; place-items: center; padding: 0; }
     .search-clear:hover { background: var(--line); color: var(--ink); }
@@ -323,6 +327,16 @@
           <input id="search" type="search" placeholder="Name oder Tisch suchen" autocomplete="off" />
           <button type="button" id="searchClear" class="search-clear" aria-label="Suche löschen" hidden>✕</button>
         </label>
+        <div class="table-filter-wrap" role="group" aria-label="Tischfilter">
+          <label class="table-filter-option">
+            <input type="checkbox" id="filterOccupied" />
+            <span>Nur belegte Tische anzeigen</span>
+          </label>
+          <label class="table-filter-option">
+            <input type="checkbox" id="filterFree" />
+            <span>Nur freie Tische anzeigen</span>
+          </label>
+        </div>
         <div class="notes-card" aria-label="Allgemeine Anmerkungen">
           <div class="notes-title">Allgemeine Anmerkungen</div>
           <ul class="notes-list" id="notesList">
@@ -499,6 +513,9 @@
     const focusCard = document.getElementById('focusCard');
     const map = document.getElementById('map');
     const resultCount = document.getElementById('resultCount');
+    const filterOccupiedEl = document.getElementById('filterOccupied');
+    const filterFreeEl = document.getElementById('filterFree');
+    function isFreeGuest(g) { return g.name.trim().toLowerCase() === 'frei'; }
     let selectedTable = null;
     let selectedGuest = null;
     let initialViewBox = '0 0 2000 1248';
@@ -717,9 +734,17 @@
     function renderGuests() {
       const q = searchEl.value.trim().toLowerCase();
       if (searchClearBtn) searchClearBtn.hidden = !searchEl.value;
-      const visible = sortedGuests(guests.filter(g => !q || g.name.toLowerCase().includes(q) || String(g.table).includes(q) || g.org.toLowerCase().includes(q)));
+      let filtered = guests.filter(g => !q || g.name.toLowerCase().includes(q) || String(g.table).includes(q) || g.org.toLowerCase().includes(q));
+      if (filterOccupiedEl && filterOccupiedEl.checked) {
+        filtered = filtered.filter(g => !isFreeGuest(g));
+      } else if (filterFreeEl && filterFreeEl.checked) {
+        filtered = filtered.filter(isFreeGuest);
+      }
+      const visible = sortedGuests(filtered);
       const allOccupiedTables = new Set(guests.map(g => g.table));
-      resultCount.textContent = `${allOccupiedTables.size} ${allOccupiedTables.size === 1 ? 'Tisch' : 'Tische'} belegt`;
+      const freeRowCount = guests.filter(isFreeGuest).length;
+      const occupiedCount = Math.max(0, allOccupiedTables.size - freeRowCount);
+      resultCount.textContent = `${occupiedCount} ${occupiedCount === 1 ? 'Tisch' : 'Tische'} belegt`;
       if (!visible.length) { guestListEl.innerHTML = '<div class="empty">Keine Treffer. Suche nach Name, Organisation oder Tischnummer.</div>'; return; }
       guestListEl.innerHTML = visible.map(g => `
         <button class="guest ${selectedGuest === g.id || selectedTable === g.table ? 'selected' : ''}" data-id="${g.id}" data-table="${g.table}">
@@ -893,6 +918,18 @@
       renderGuests();
       guestListEl.scrollTop = 0;
     });
+    if (filterOccupiedEl && filterFreeEl) {
+      filterOccupiedEl.addEventListener('change', () => {
+        if (filterOccupiedEl.checked) filterFreeEl.checked = false;
+        renderGuests();
+        guestListEl.scrollTop = 0;
+      });
+      filterFreeEl.addEventListener('change', () => {
+        if (filterFreeEl.checked) filterOccupiedEl.checked = false;
+        renderGuests();
+        guestListEl.scrollTop = 0;
+      });
+    }
     document.getElementById('clearBtn').addEventListener('click', clearSelection);
 
     const APP_PASSWORD = 'vipclub';

@@ -258,14 +258,16 @@
     }
 
     body.auth-locked #deviceStage { visibility: hidden; }
-    body.keyboard-open .layout { height: calc(var(--app-vh, 100dvh) - 78px) !important; }
-    body.keyboard-open .panel, body.keyboard-open .map-card { height: 100% !important; min-height: 0 !important; }
+    body.keyboard-open .layout { height: calc(var(--app-vh, 100dvh) - 16px) !important; }
+    body.keyboard-open .panel { height: 100% !important; min-height: 0 !important; padding: 10px !important; }
+    body.keyboard-open .app { padding: 8px !important; }
+    body.keyboard-open .topbar { display: none !important; }
+    body.keyboard-open .search-wrap { margin: 0 0 8px !important; }
     body.keyboard-open .notes-card,
     body.keyboard-open .result-meta,
     body.keyboard-open .sort-wrap,
     body.keyboard-open .panel-footer { display: none !important; }
     body.keyboard-open .guest-list { min-height: 80px; }
-    body.keyboard-open .map-card { display: none !important; }
     .auth-gate {
       position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center;
       padding: 24px; background: linear-gradient(135deg, #14212b 0%, #1e536f 100%);

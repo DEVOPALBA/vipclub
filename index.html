@@ -777,6 +777,10 @@
     function selectGuest(id) {
       const g = guests.find(item => item.id === id);
       if (!g) return;
+      if (selectedGuest === id) {
+        clearSelection();
+        return;
+      }
       selectedGuest = id;
       selectedTable = g.table;
       map.setAttribute('viewBox', initialViewBox);
@@ -790,6 +794,10 @@
       selectedGuest = null;
       focusCard.hidden = true;
       map.setAttribute('viewBox', initialViewBox);
+      if (searchEl.value) {
+        searchEl.value = '';
+        if (searchClearBtn) searchClearBtn.hidden = true;
+      }
       setTableVisuals();
     }
     const GUEST_LIST_URL = 'bulcpiv/alba-event-data-7f31c2.json';

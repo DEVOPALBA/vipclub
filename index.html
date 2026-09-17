@@ -258,6 +258,8 @@
     }
 
     body.auth-locked #deviceStage { visibility: hidden; }
+    body.keyboard-open .layout { height: calc(var(--app-vh, 100dvh) - 78px) !important; }
+    body.keyboard-open .panel, body.keyboard-open .map-card { height: 100% !important; }
     .auth-gate {
       position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center;
       padding: 24px; background: linear-gradient(135deg, #14212b 0%, #1e536f 100%);
@@ -915,6 +917,29 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(error => console.warn('PWA-Service-Worker konnte nicht registriert werden:', error)));
     }
+
+    // Tastatur-Fix: Die virtuelle Tastatur deckt auf iPad/iPhone den unteren Seitenbereich ab,
+    // ohne dass der Browser die Seitenhöhe automatisch anpasst. Wir beobachten die tatsächlich
+    // sichtbare Höhe über die visualViewport-API und schrumpfen die App-Höhe entsprechend,
+    // damit die Gästeliste über der Tastatur sichtbar bleibt statt darunter zu verschwinden.
+    if (window.visualViewport) {
+      const vv = window.visualViewport;
+      function updateViewportHeight() {
+        const fullHeight = window.innerHeight;
+        const visibleHeight = vv.height;
+        const keyboardLikelyOpen = (fullHeight - visibleHeight) > 120;
+        document.documentElement.style.setProperty('--app-vh', `${visibleHeight}px`);
+        document.body.classList.toggle('keyboard-open', keyboardLikelyOpen);
+      }
+      vv.addEventListener('resize', updateViewportHeight);
+      vv.addEventListener('scroll', updateViewportHeight);
+      updateViewportHeight();
+    }
+    searchEl.addEventListener('focus', () => {
+      window.setTimeout(() => {
+        searchEl.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      }, 300);
+    });
   </script>
 </body>
 </html>

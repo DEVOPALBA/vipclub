@@ -734,7 +734,7 @@
     function renderGuests() {
       const q = searchEl.value.trim().toLowerCase();
       if (searchClearBtn) searchClearBtn.hidden = !searchEl.value;
-      let filtered = guests.filter(g => !q || g.name.toLowerCase().includes(q) || String(g.table).includes(q) || g.org.toLowerCase().includes(q));
+      let filtered = guests.filter(g => !q || g.name.toLowerCase().includes(q) || String(g.table).includes(q) || g.org.toLowerCase().includes(q) || g.remark.toLowerCase().includes(q));
       if (filterOccupiedEl && filterOccupiedEl.checked) {
         filtered = filtered.filter(g => !isFreeGuest(g));
       } else if (filterFreeEl && filterFreeEl.checked) {
